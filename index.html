@@ -1,1 +1,119 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Premium URL Shortener</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      background: #1f1f1f;
+      padding: 2rem 3rem;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 0, 150, 0.2);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      color: #ff4ecf;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    input {
+      background: #2a2a2a;
+      color: #fff;
+    }
+
+    button {
+      background: linear-gradient(90deg, #ff4ecf, #4e9bff);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    #result {
+      margin-top: 1.5rem;
+      font-weight: bold;
+    }
+
+    a {
+      color: #4e9bff;
+      word-break: break-all;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ Thunder Shortener</h1>
+    <input id="url" type="text" placeholder="Enter destination URL (e.g., https://example.com)" />
+    <input id="alias" type="text" placeholder="Custom alias (e.g., mycoollink)" />
+    <button onclick="shorten()">Shorten</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function shorten() {
+      const url = document.getElementById('url').value.trim();
+      const alias = document.getElementById('alias').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = "⏳ Shortening...";
+
+      try {
+        // Step 1: Shorten with ShareDisk
+        const sharediskRes = await fetch(`https://sharedisklinks.com/api?api=4b32a44004fa17ecbefd0ae9675d85b02af7f5e2&url=${encodeURIComponent(url)}&alias=${alias}`);
+        const sharediskData = await sharediskRes.json();
+
+        if (sharediskData.status !== "success") {
+          throw new Error("Sharedisk error: " + (sharediskData.message || "Unknown error"));
+        }
+
+        const sharediskShort = sharediskData.shortenedUrl;
+
+        // Step 2: Shorten the ShareDisk link using LinkCents
+        const linkcentsRes = await fetch(`https://linkcents.com/api?api=709baa823a92d9d2153be6fbee636f338da12f4b&url=${encodeURIComponent(sharediskShort)}&alias=${alias}`);
+        const linkcentsData = await linkcentsRes.json();
+
+        if (linkcentsData.status !== "success") {
+          throw new Error("LinkCents error: " + (linkcentsData.message || "Unknown error"));
+        }
+
+        const finalLink = linkcentsData.shortenedUrl;
+        resultDiv.innerHTML = `✅ <a href="${finalLink}" target="_blank">${finalLink}</a>`;
+      } catch (err) {
+        resultDiv.innerHTML = `❌ ${err.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
